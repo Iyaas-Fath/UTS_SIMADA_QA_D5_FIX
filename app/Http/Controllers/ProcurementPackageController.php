@@ -74,7 +74,7 @@ public function update(Request $request, $id)
         'pagu'           => 'required|numeric',
         'nilai_kontrak'  => 'required|numeric',
         'status'         => 'required|string',
-        'progress'       => 'required|numeric|min:0|max:100',
+        'progress'       => 'required|numeric|min:0|max:255',
     ]);
 
     $package->update([

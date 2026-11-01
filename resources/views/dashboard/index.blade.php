@@ -47,9 +47,7 @@
                         <a href="{{ route('admin.users.index') }}" class="nav-link">
                             <i class="bi bi-people-fill me-2"></i> Kelola User
                         </a>
-                       <a href="{{ route('packages.create') }}" class="btn btn-success" style="display: block; width: 100%; text-align: center; background-color: #198754; border-radius: 6px; padding: 10px 0; font-weight: 500; text-decoration: none; color: white;">
-    + Tambah Paket
-</a>
+                            <button type="button" data-bs-toggle="modal" data-bs-target="#tambahPaketModal" style="background-color: #059669; color: #ffffff; padding: 10px 16px; border-radius: 6px; font-weight: bold; text-decoration: none; display: inline-block; border: none; width: 100%; text-align: left;">+ Tambah Paket</button>
                     </li>
                     @endif
 
@@ -219,62 +217,145 @@
                     </div>
                 </div>
 
-                <div class="table-responsive">
-                    <table class="table table-borderless align-middle">
-                        <thead>
-    <tr>
-        <th>Nama Paket</th>
-        <th>OPD</th>
-        <th>Metode</th>
-        <th>Status</th>
-        <th style="width: 200px;">Progress</th>
-        @if(auth()->check() && in_array(strtoupper(auth()->user()->role), ['ADMIN', 'PETUGAS']))
-    <th>Aksi</th>
-@endif
-    </tr>
-</thead>
-                        <tbody>
-    @forelse($packages as $sp)
-        <tr>
-            <td class="fw-bold">{{ $sp->nama_paket }}</td>
-            <td class="text-muted">{{ $sp->opd->nama_opd ?? 'Dinas Terkait' }}</td>
-            <td class="text-muted">{{ $sp->metode }}</td>
-            <td>
-                @if(strtolower($sp->status) == 'selesai')
-                    <span class="badge bg-success-subtle text-success border border-success-subtle px-2 py-1">Selesai</span>
-                @elseif(strtolower($sp->status) == 'proses')
-                    <span class="badge bg-success-subtle text-success border border-success-subtle px-2 py-1">Proses</span>
-                @else
-                    <span class="badge bg-secondary-subtle text-secondary border border-secondary-subtle px-2 py-1">Perencanaan</span>
+               <div class="table-responsive">
+    <table class="table table-borderless align-middle">
+        <thead>
+            <tr>
+                <th>Nama Paket</th>
+                <th>OPD</th>
+                <th>Metode</th>
+                <th>Status</th>
+                <th style="width: 200px;">Progress</th>
+                @if(auth()->check() && in_array(strtoupper(auth()->user()->role), ['ADMIN', 'PETUGAS']))
+                    <th class="text-center">Aksi</th>
                 @endif
-            </td>
-            <td>
-            <!-- Contoh perbaikan pada baris progress di tabel / tracking progress -->
-<div class="progress" style="height: 6px;">
-    <div class="progress-bar bg-success" role="progressbar" style="width: {{ $sp->progress }}%;" aria-valuenow="{{ $sp->progress }}" aria-valuemin="0" aria-valuemax="100"></div>
-</div>
-<span class="small text-muted">{{ $sp->progress }}%</span>
-            </td>
-            @if(auth()->check() && in_array(strtoupper(auth()->user()->role), ['ADMIN', 'PETUGAS']))
-    <td>
-        <div class="d-flex align-items-center gap-1">
-            <a href="{{ route('packages.edit', $sp->id) }}" class="btn btn-success btn-sm px-2 py-1" style="font-size: 11px; font-weight: 500;">Edit / Update</a>
-            
-            <form action="{{ route('packages.destroy', $sp->id) }}" method="POST" class="d-inline" onsubmit="return confirm('Yakin ingin menghapus paket ini?')">
-                @csrf
-                @method('DELETE')
-                <button type="submit" class="btn btn-danger btn-sm px-2 py-1" style="font-size: 11px; font-weight: 500;">Hapus</button>
-            </form>
+            </tr>
+        </thead>
+        <tbody>
+            @forelse($packages as $sp)
+                <tr>
+                    <td class="fw-bold">{{ $sp->nama_paket }}</td>
+                    <td class="text-muted">{{ $sp->opd->nama_opd ?? 'Dinas Terkait' }}</td>
+                    <td class="text-muted">{{ $sp->metode }}</td>
+                    
+                    <!-- KOLOM STATUS -->
+                    <td>
+                        @if(strtolower($sp->status ?? '') == 'selesai')
+                            <span class="badge bg-success-subtle text-success border border-success-subtle px-2 py-1">Selesai</span>
+                        @elseif(strtolower($sp->status ?? '') == 'proses')
+                            <span class="badge bg-success-subtle text-success border border-success-subtle px-2 py-1">Proses</span>
+                        @else
+                            <span class="badge bg-secondary-subtle text-secondary border border-secondary-subtle px-2 py-1">Perencanaan</span>
+                        @endif
+                    </td>
+
+                    <!-- KOLOM PROGRESS -->
+                    <td>
+                        <div class="progress" style="height: 6px;">
+                            <div class="progress-bar bg-success" role="progressbar" style="width: {{ $sp->progress ?? 0 }}%;" aria-valuenow="{{ $sp->progress ?? 0 }}" aria-valuemin="0" aria-valuemax="100"></div>
+                        </div>
+                        <span class="small text-muted">{{ $sp->progress ?? 0 }}%</span>
+                    </td>
+
+                    <!-- KOLOM AKSI (Hanya tampil untuk Admin & Petugas) -->
+                    @if(auth()->check() && in_array(strtoupper(auth()->user()->role), ['ADMIN', 'PETUGAS']))
+                        <td class="temp-aksi text-center">
+                            <!-- Tombol Edit Modal -->
+                            <button type="button" data-bs-toggle="modal" data-bs-target="#editPaketModal{{ $sp->id }}" style="background-color: #059669; color: white; padding: 6px 12px; border-radius: 4px; font-size: 12px; font-weight: bold; border: none; display: inline-block;">
+                                Edit / Update
+                            </button>
+
+                            <!-- Tombol Hapus -->
+                            <form action="{{ route('packages.destroy', $sp->id) }}" method="POST" class="d-inline" onsubmit="return confirm('Yakin ingin menghapus paket ini?')">
+                                @csrf
+                                @method('DELETE')
+                                <button type="submit" class="btn btn-danger btn-sm ms-1">Hapus</button>
+                            </form>
+                        </td>
+                    @endif
+                </tr>
+
+                <!-- Modal Edit Paket per baris ID -->
+<!-- Modal Edit Paket per baris ID -->
+@if(auth()->check() && in_array(strtoupper(auth()->user()->role), ['ADMIN', 'PETUGAS']))
+<div class="modal fade" id="editPaketModal{{ $sp->id }}" tabindex="-1" aria-labelledby="editPaketModalLabel{{ $sp->id }}" aria-hidden="true">
+                    <div class="modal-dialog modal-lg">
+                        <div class="modal-content border-0 shadow-lg" style="border-radius: 12px;">
+                            <div class="modal-header bg-success text-white">
+                                <h5 class="modal-title fw-bold" id="editPaketModalLabel{{ $sp->id }}">Perbarui Progres & Paket Pengadaan</h5>
+                                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                            </div>
+                            <form action="{{ route('packages.update', $sp->id) }}" method="POST">
+                                @csrf
+                                @method('PUT')
+                                <div class="modal-body p-4 text-start">
+                                    <div class="mb-3">
+                                        <label class="form-label fw-bold">Kode Paket</label>
+                                        <input type="text" name="kode_paket" class="form-control" value="{{ $sp->kode_paket ?? '' }}" required>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label fw-bold">Nama Paket</label>
+                                        <input type="text" name="nama_paket" class="form-control" value="{{ $sp->nama_paket ?? '' }}" required>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-md-6 mb-3">
+                                            <label class="form-label fw-bold">Jenis Pengadaan</label>
+                                            <select name="jenis_pengadaan" class="form-select" required>
+                                                <option value="Barang" {{ ($sp->jenis_pengadaan ?? '') == 'Barang' ? 'selected' : '' }}>Barang</option>
+                                                <option value="Jasa" {{ ($sp->jenis_pengadaan ?? '') == 'Jasa' ? 'selected' : '' }}>Jasa</option>
+                                                <option value="Pekerjaan Konstruksi" {{ ($sp->jenis_pengadaan ?? '') == 'Pekerjaan Konstruksi' ? 'selected' : '' }}>Pekerjaan Konstruksi</option>
+                                            </select>
+                                        </div>
+                                        <div class="col-md-6 mb-3">
+                                            <label class="form-label fw-bold">Metode</label>
+                                            <select name="metode" class="form-select" required>
+                                                <option value="e-Tendering" {{ ($sp->metode ?? '') == 'e-Tendering' ? 'selected' : '' }}>e-Tendering</option>
+                                                <option value="e-Pengadaan Langsung" {{ ($sp->metode ?? '') == 'e-Pengadaan Langsung' ? 'selected' : '' }}>e-Pengadaan Langsung</option>
+                                                <option value="Pengadaan Langsung" {{ ($sp->metode ?? '') == 'Pengadaan Langsung' ? 'selected' : '' }}>Pengadaan Langsung</option>
+                                                <option value="e-Purchasing" {{ ($sp->metode ?? '') == 'e-Purchasing' ? 'selected' : '' }}>e-Purchasing</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-md-6 mb-3">
+                                            <label class="form-label fw-bold">Pagu (Rp)</label>
+                                            <input type="number" name="pagu" class="form-control" value="{{ $sp->pagu ?? '' }}" required>
+                                        </div>
+                                        <div class="col-md-6 mb-3">
+                                            <label class="form-label fw-bold">Nilai Kontrak (Rp)</label>
+                                            <input type="number" name="nilai_kontrak" class="form-control" value="{{ $sp->nilai_kontrak ?? '' }}">
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-md-6 mb-3">
+                                            <label class="form-label fw-bold">Status</label>
+                                            <select name="status" class="form-select" required>
+                                                <option value="Perencanaan" {{ strtolower($sp->status ?? '') == 'perencanaan' ? 'selected' : '' }}>Perencanaan</option>
+                                                <option value="Proses" {{ strtolower($sp->status ?? '') == 'proses' ? 'selected' : '' }}>Proses</option>
+                                                <option value="Selesai" {{ strtolower($sp->status ?? '') == 'selesai' ? 'selected' : '' }}>Selesai</option>
+                                            </select>
+                                        </div>
+                                        <div class="col-md-6 mb-3">
+                                            <label class="form-label fw-bold">Progress (%)</label>
+                                            <input type="number" name="progress" class="form-control" min="0" max="100" value="{{ $sp->progress ?? 0 }}" required>
+                                        </div>
+                                    </div>
+                                </div>
+                               <div class="modal-footer bg-light">
+                        <button type="button" class="btn btn-secondary btn-sm px-3" data-bs-dismiss="modal">Batal</button>
+                        <button type="submit" class="btn btn-success btn-sm px-4">Simpan Perubahan</button>
+                    </div>
+                </form>
+            </div>
         </div>
-    </td>
+    </div>
 @endif
-            </td>
-        </tr>
-    @empty
-        <tr>
-            <td colspan="6" class="text-center py-4 text-muted">Tidak ada paket pengadaan yang sesuai dengan filter.</td>
-        </tr>
-    @endforelse
+
+@empty
+    <tr>
+        <td colspan="6" class="text-center py-4 text-muted">Tidak ada paket pengadaan yang sesuai dengan filter.</td>
+    </tr>
+@endforelse
 </tbody>
                     </table>
                 </div>
@@ -324,3 +405,88 @@
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
+
+<!-- Modal Tambah Paket -->
+<div class="modal fade" id="tambahPaketModal" tabindex="-1" aria-labelledby="tambahPaketModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content border-0 shadow-lg" style="border-radius: 12px;">
+            <div class="modal-header bg-success text-white">
+                <h5 class="modal-title fw-bold" id="tambahPaketModalLabel">Tambah Paket Pengadaan Baru</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <!-- Form mengarah ke route store backend yang sudah ada -->
+            <form action="{{ route('packages.store') }}" method="POST">
+                @csrf
+                <div class="modal-body p-4">
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Kode Paket</label>
+                        <input type="text" name="kode_paket" class="form-control" required placeholder="Masukkan kode paket...">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Nama Paket</label>
+                        <input type="text" name="nama_paket" class="form-control" required placeholder="Masukkan nama paket...">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">OPD</label>
+                        <select name="opd_id" class="form-select" required>
+                            <option value="">Pilih OPD</option>
+                            @foreach($opdList as $opd)
+                                <option value="{{ $opd->id }}">{{ $opd->nama_opd ?? $opd->name }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold">Jenis Pengadaan</label>
+                            <select name="jenis_pengadaan" class="form-select" required>
+                                <option value="Barang">Barang</option>
+                                <option value="Jasa">Jasa</option>
+                                <option value="Pekerjaan Konstruksi">Pekerjaan Konstruksi</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold">Metode</label>
+                            <select name="metode" class="form-select" required>
+                                <option value="e-Tendering">e-Tendering</option>
+                                <option value="e-Pengadaan Langsung">e-Pengadaan Langsung</option>
+                                <option value="Pengadaan Langsung">Pengadaan Langsung</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold">Pagu (Rp)</label>
+                            <input type="number" name="pagu" class="form-control" required placeholder="Contoh: 100000000">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold">Nilai Kontrak (Rp)</label>
+                            <input type="number" name="nilai_kontrak" class="form-control" placeholder="Contoh: 95000000">
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label fw-bold">Tahun Anggaran</label>
+                            <input type="number" name="tahun_anggaran" class="form-control" value="2026" required>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label fw-bold">Status</label>
+                            <select name="status" class="form-select" required>
+                                <option value="Perencanaan">Perencanaan</option>
+                                <option value="Proses">Proses</option>
+                                <option value="Selesai">Selesai</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label fw-bold">Progress (%)</label>
+                            <input type="number" name="progress" class="form-control" min="0" max="100" value="0" required>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer bg-light">
+                    <button type="button" class="btn btn-secondary btn-sm px-3" data-bs-dismiss="modal">Batal</button>
+                    <button type="submit" class="btn btn-success btn-sm px-4">Simpan Paket</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

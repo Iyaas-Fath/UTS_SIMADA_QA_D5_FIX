@@ -25,7 +25,7 @@ return new class extends Migration {
             $table->unsignedBigInteger('ppk_id')->nullable();
             $table->unsignedBigInteger('created_by')->nullable();
             $table->string('jenis_pengadaan', 40);
-            $table->enum('metode', ['e-Tendering', 'e-Pengadaan Langsung', 'e-Purchasing']);
+            $table->string('metode', 100);
             $table->decimal('pagu', 18, 2);
             $table->decimal('nilai_kontrak', 18, 2)->nullable();
             $table->unsignedSmallInteger('tahun_anggaran');

@@ -63,26 +63,38 @@ class DatabaseSeeder extends Seeder
 
         $counter = 1;
 
-        // Loop untuk membuat data paket pengadaan yang terdistribusi ke berbagai OPD
-        foreach ($opdList as $opd) {
-            foreach ($jenisList as $jenis) {
-                foreach ($metodeList as $metode) {
-                    ProcurementPackage::create([
-                        'kode_paket' => 'SIMADA-' . str_pad($counter, 3, '0', STR_PAD_LEFT),
-                        'nama_paket' => 'Paket ' . $jenis . ' ' . $metode,
-                        'opd_id' => $opd->id,
-                        'jenis_pengadaan' => $jenis,
-                        'metode' => $metode,
-                        'pagu' => rand(100, 500) * 1000000,
-                        'nilai_kontrak' => rand(80, 450) * 1000000,
-                        'tahun_anggaran' => 2026,
-                        'status' => $statusList[array_rand($statusList)],
-                        'progress' => 77, // ubah dari 'progress_persen' menjadi 'progress'
-                        'tanggal_kontrak' => '2026-03-15',
-                    ]);
-                    $counter++;
+        // Daftar data sampel paket pengadaan yang spesifik sesuai KAK
+$packages = [
+    [
+        'kode_paket' => 'SIMADA-001',
+        'nama_paket' => 'Paket Jasa Konsultansi e-Pengadaan Langsung',
+        'opd_id' => 1,
+        'jenis_pengadaan' => 'Jasa Konsultansi',
+        'metode' => 'e-Pengadaan Langsung',
+        'pagu' => 500000000,
+        'nilai_kontrak' => 403000000,
+        'tahun_anggaran' => 2026,
+        'status' => 'Selesai',
+        'progress' => 77,
+        'tanggal_kontrak' => '2026-03-15',
+    ],
+    [
+        'kode_paket' => 'SIMADA-002',
+        'nama_paket' => 'Paket Jasa Konsultansi e-Purchasing',
+        'opd_id' => 1,
+        'jenis_pengadaan' => 'Jasa Konsultansi',
+        'metode' => 'e-Purchasing',
+        'pagu' => 325000000,
+        'nilai_kontrak' => 300000000,
+        'tahun_anggaran' => 2026,
+        'status' => 'Proses',
+        'progress' => 77,
+        'tanggal_kontrak' => '2026-01-15',
+    ],
+];
+
+foreach ($packages as $pkgData) {
+    ProcurementPackage::create($pkgData);
+}
                 }
             }
-        }
-    }
-}
